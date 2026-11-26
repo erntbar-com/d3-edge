@@ -1,0 +1,43 @@
+# D3 Edge worker
+
+Puts [D3 Edge](https://ai.d3.com) in front of a site hosted outside
+Cloudflare — nginx, a VPS, another cloud. On every request the worker
+asks your D3 Edge policy for a decision, then passes the request on to
+your site or answers `403`. If the check errors or times out, traffic
+passes: an outage on our side never takes your site down.
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/d3-inc/d3-edge-adapters/tree/main/cloudflare-worker)
+
+The deploy flow asks for one secret, `DNA_API_KEY` — create the
+key at [dashboard.d3.com/keys](https://dashboard.d3.com/keys)
+first.
+
+## After deploying: connect your site
+
+The worker starts disconnected and serves nothing until you attach it.
+In the Cloudflare dashboard: **Workers & Pages → your worker → Settings
+→ Domains & Routes**, add a route like `www.example.com/*`. Your DNS
+record stays exactly what it is; allowed traffic flows on to your site
+like before.
+
+Check it's live with `curl -sI https://www.example.com/` — every
+response carries an `x-d3-edge` header once it is.
+
+## Turning it off
+
+Remove the route, or set `DNA_ENABLED = "false"` under `[vars]` in your repo's
+`wrangler.toml`, and the worker passes everything untouched. Set it there, not
+in the Cloudflare dashboard: the next deploy replaces dashboard variables with
+the file's. Your site never depends on D3 Edge to serve.
+
+## Configuration
+
+Every variable the worker reads — timeout budget, fail mode, origin
+overrides — is in the [configuration
+reference](https://ai.d3.com/docs/sdks/cloudflare#configuration-reference).
+
+## About this template
+
+The deploy button clones just this directory into your GitHub account
+as a new repo — you own it from there. Issues are welcome; for anything
+else, write to [hello@d3.com](mailto:hello@d3.com).
